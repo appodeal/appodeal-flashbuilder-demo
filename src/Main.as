@@ -1,30 +1,29 @@
 package com.appodeal.test
 {
+	import com.appodeal.aneplugin.*;
+	import com.appodeal.aneplugin.UserSettings;
+	import com.appodeal.aneplugin.constants.Gender;
+	import com.appodeal.aneplugin.constants.LogLevel;
+	
+	import fl.controls.Button;
+	import fl.controls.CheckBox;
+	import fl.controls.ComboBox;
 	import fl.data.DataProvider;
+	
 	import flash.desktop.InteractiveIcon;
 	import flash.desktop.NativeApplication;
 	import flash.display.Bitmap;
-	import flash.events.Event;
+	import flash.display.SimpleButton;
 	import flash.display.Sprite;
 	import flash.display.StageAlign;
 	import flash.display.StageScaleMode;
+	import flash.events.Event;
+	import flash.events.MouseEvent;
+	import flash.text.Font;
 	import flash.text.TextFormat;
 	import flash.ui.Multitouch;
 	import flash.ui.MultitouchInputMode;
-	import flash.display.SimpleButton;
-	import flash.events.MouseEvent;
-	import flash.text.Font;
-	import com.appodeal.aneplugin.*;
-	import com.appodeal.aneplugin.UserSettings;
-	import com.appodeal.aneplugin.constants.Alcohol;
-	import com.appodeal.aneplugin.constants.Gender;
-	import com.appodeal.aneplugin.constants.Occupation;
-	import com.appodeal.aneplugin.constants.Relation;
-	import com.appodeal.aneplugin.constants.Smoking;
-	
-	import fl.controls.Button;
-	import fl.controls.ComboBox;
-	import fl.controls.CheckBox;
+
 	/**
 	 * ...
 	 * @author Appodeal
@@ -53,7 +52,6 @@ package com.appodeal.test
 		private var loggingCb:CheckBox = new CheckBox();
 		private var testingCb:CheckBox = new CheckBox();
 		private var autocacheCb:CheckBox = new CheckBox();
-		private var confirmCb:CheckBox = new CheckBox();
 		private var disableSmartBannersCb:CheckBox = new CheckBox();
 		private var disableBannerAnimationCb:CheckBox = new CheckBox();
 		private var disable728x90BannersCb:CheckBox = new CheckBox();
@@ -136,7 +134,6 @@ package com.appodeal.test
 			loggingCb.label = "Logging";
 			testingCb.label = "Testing";
 			autocacheCb.label = "AutoCache";
-			confirmCb.label = "Confirm";
 			disableSmartBannersCb.label = "Disable Smart Banners";
 			disableBannerAnimationCb.label = "Disable Banner Animation";
 			disable728x90BannersCb.label = "Disable 728x90 Banners";
@@ -144,11 +141,11 @@ package com.appodeal.test
 			disableLocationPermissionCheckCb.label = "Disable Location Permission Check";
 			disableWriteExternalStorageCheckCb.label = "Disable Write External Storage Check";
 			
-			var checkboxes:Array = new Array(loggingCb, testingCb, autocacheCb, confirmCb, disableSmartBannersCb, disableBannerAnimationCb, disable728x90BannersCb, enableTriggerOnLoadedOnPrecacheCb, disableLocationPermissionCheckCb, disableWriteExternalStorageCheckCb);
+			var checkboxes:Array = new Array(loggingCb, testingCb, autocacheCb, disableSmartBannersCb, disableBannerAnimationCb, disable728x90BannersCb, enableTriggerOnLoadedOnPrecacheCb, disableLocationPermissionCheckCb, disableWriteExternalStorageCheckCb);
 			currentY = PADDING;
 			var leftColumn:int = PADDING * 2 + BUTTON_WIDTH;
 			xPos = leftColumn;
-			var lastDouble:int = 3;
+			var lastDouble:int = 2;
 			tf.size = 15;
 			for(var i:int = 0; i < checkboxes.length; i++ ){
 				addChild(checkboxes[i]);
@@ -190,26 +187,19 @@ package com.appodeal.test
 		}
 		
 		private function initialize(event:MouseEvent):void{
-			appodeal.setLogging(loggingCb.selected);
+			if(loggingCb.selected) appodeal.setLogLevel(LogLevel.VERBOSE);
+			else appodeal.setLogLevel(LogLevel.NONE);
 			appodeal.setTesting(testingCb.selected);
-			if(confirmCb.selected) appodeal.confirm(getSelectedAdType());
 			
 			//Setting user data
 			userSettings.setAge(25);
-            userSettings.setAlcohol(Alcohol.NEUTRAL);
-            userSettings.setBirthday("01/01/1990");
-            userSettings.setEmail("hi@appodeal.com");
             userSettings.setGender(Gender.MALE);
-            userSettings.setInterests("gym, cinema, cars, games, tvshows");
-            userSettings.setOccupation(Occupation.WORK);
-            userSettings.setRelationship(Relation.DATING);
-            userSettings.setSmoking(Smoking.NEUTRAL);
             userSettings.setUserId("custom_user_id");
 			
-			appodeal.set728x90Banners(!disable728x90BannersCb.selected);
+			appodeal.setTabletBanners(!disable728x90BannersCb.selected);
             appodeal.setSmartBanners(disableSmartBannersCb.selected);
             appodeal.setBannerAnimation(!disableBannerAnimationCb.selected);
-			appodeal.setOnLoadedTriggerBoth(getSelectedAdType(), enableTriggerOnLoadedOnPrecacheCb.selected);
+			appodeal.setTriggerOnLoadedOnPrecache(getSelectedAdType(), enableTriggerOnLoadedOnPrecacheCb.selected);
 			if (disableLocationPermissionCheckCb.selected)
 				appodeal.disableLocationPermissionCheck();
 			if (disableWriteExternalStorageCheckCb.selected)
@@ -224,7 +214,6 @@ package com.appodeal.test
             appodeal.addEventListener(AdEvent.INTERSTITIAL_SHOWN, onInterstitial);
             appodeal.addEventListener(AdEvent.INTERSTITIAL_CLICKED, onInterstitial);
             appodeal.addEventListener(AdEvent.INTERSTITIAL_CLOSED, onInterstitial);
-			appodeal.addEventListener(AdEvent.INTERSTITIAL_FINISHED, onInterstitial);
             appodeal.addEventListener(AdEvent.REWARDED_VIDEO_LOADED, onRewardedVideo);
             appodeal.addEventListener(AdEvent.REWARDED_VIDEO_FAILED_TO_LOAD, onRewardedVideo);
             appodeal.addEventListener(AdEvent.REWARDED_VIDEO_SHOWN, onRewardedVideo);
@@ -247,11 +236,7 @@ package com.appodeal.test
 				case 3:
 					return AdType.INTERSTITIAL;
 				case 4:
-					return AdType.SKIPPABLE_VIDEO;
-				case 5:
 					return AdType.REWARDED_VIDEO;
-				case 6:
-					return AdType.INTERSTITIAL | AdType.SKIPPABLE_VIDEO;
 				default:
 					return 0;
 			}
@@ -332,7 +317,6 @@ package com.appodeal.test
                     trace('onRewardedVideo: ad shown');
                     break;
                 case AdEvent.REWARDED_VIDEO_FINISHED:
-                    videoShown = false;
                     trace('onRewardedVideo: ad clicked, your reward:', event.amount, event.name);
                     break;
                 case AdEvent.REWARDED_VIDEO_CLOSED:
@@ -344,11 +328,9 @@ package com.appodeal.test
         {
             switch (event.type) {
                 case AdEvent.INTERSTITIAL_LOADED:
-					interstitialState = 2;
                     trace('onInterstitial: ad loaded');
                     break;
                 case AdEvent.INTERSTITIAL_FAILED_TO_LOAD:
-					interstitialState = 0;
                     trace('onInterstitial: failed to load ad');
                     break;
                 case AdEvent.INTERSTITIAL_SHOWN:
@@ -360,10 +342,6 @@ package com.appodeal.test
                 case AdEvent.INTERSTITIAL_CLOSED:
                     trace('onInterstitial: ad closed');
                     break;
-				case AdEvent.INTERSTITIAL_FINISHED:
-					trace('onInterstitial: ad finished');
-					appodeal.toast('onInterstitial: ad finished');
-					break;
             }
         }
 	}

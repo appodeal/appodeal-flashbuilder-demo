@@ -1,30 +1,29 @@
 package
 {
+	import com.appodeal.aneplugin.*;
+	import com.appodeal.aneplugin.UserSettings;
+	import com.appodeal.aneplugin.constants.Gender;
+	import com.appodeal.aneplugin.constants.LogLevel;
+	
+	import fl.controls.Button;
+	import fl.controls.CheckBox;
+	import fl.controls.ComboBox;
 	import fl.data.DataProvider;
+	
 	import flash.desktop.InteractiveIcon;
 	import flash.desktop.NativeApplication;
 	import flash.display.Bitmap;
-	import flash.events.Event;
+	import flash.display.SimpleButton;
 	import flash.display.Sprite;
 	import flash.display.StageAlign;
 	import flash.display.StageScaleMode;
+	import flash.events.Event;
+	import flash.events.MouseEvent;
+	import flash.text.Font;
 	import flash.text.TextFormat;
 	import flash.ui.Multitouch;
 	import flash.ui.MultitouchInputMode;
-	import flash.display.SimpleButton;
-	import flash.events.MouseEvent;
-	import flash.text.Font;
-	import com.appodeal.aneplugin.*;
-	import com.appodeal.aneplugin.UserSettings;
-	import com.appodeal.aneplugin.constants.Alcohol;
-	import com.appodeal.aneplugin.constants.Gender;
-	import com.appodeal.aneplugin.constants.Occupation;
-	import com.appodeal.aneplugin.constants.Relation;
-	import com.appodeal.aneplugin.constants.Smoking;
-	
-	import fl.controls.Button;
-	import fl.controls.ComboBox;
-	import fl.controls.CheckBox;
+
 	/**
 	 * ...
 	 * @author Appodeal
@@ -53,7 +52,6 @@ package
 		private var loggingCb:CheckBox = new CheckBox();
 		private var testingCb:CheckBox = new CheckBox();
 		private var autocacheCb:CheckBox = new CheckBox();
-		private var confirmCb:CheckBox = new CheckBox();
 		private var disableSmartBannersCb:CheckBox = new CheckBox();
 		private var disableBannerAnimationCb:CheckBox = new CheckBox();
 		private var disable728x90BannersCb:CheckBox = new CheckBox();
@@ -117,7 +115,8 @@ package
 			//adType.selectedIndex;
 			
 			var xPos:int = PADDING;
-			for(var i:int = 0; i < buttons.length; i++ ){
+			var i:int;
+			for( i = 0; i < buttons.length; i++ ){
 				addChild(buttons[i]);
 				buttons[i].setSize(BUTTON_WIDTH, BUTTON_HEIGHT);
 				buttons[i].setStyle("textFormat", tf);
@@ -135,8 +134,7 @@ package
 			
 			loggingCb.label = "Logging";
 			testingCb.label = "Testing";
-			autocacheCb.label = "AutoCache";
-			confirmCb.label = "Confirm";
+			autocacheCb.label = "AutoCache";			
 			disableSmartBannersCb.label = "Disable Smart Banners";
 			disableBannerAnimationCb.label = "Disable Banner Animation";
 			disable728x90BannersCb.label = "Disable 728x90 Banners";
@@ -144,13 +142,13 @@ package
 			disableLocationPermissionCheckCb.label = "Disable Location Permission Check";
 			disableWriteExternalStorageCheckCb.label = "Disable Write External Storage Check";
 			
-			var checkboxes:Array = new Array(loggingCb, testingCb, autocacheCb, confirmCb, disableSmartBannersCb, disableBannerAnimationCb, disable728x90BannersCb, enableTriggerOnLoadedOnPrecacheCb, disableLocationPermissionCheckCb, disableWriteExternalStorageCheckCb);
+			var checkboxes:Array = new Array(loggingCb, testingCb, autocacheCb, disableSmartBannersCb, disableBannerAnimationCb, disable728x90BannersCb, enableTriggerOnLoadedOnPrecacheCb, disableLocationPermissionCheckCb, disableWriteExternalStorageCheckCb);
 			currentY = PADDING;
 			var leftColumn:int = PADDING * 2 + BUTTON_WIDTH;
 			xPos = leftColumn;
-			var lastDouble:int = 3;
+			var lastDouble:int = 1;
 			tf.size = 15;
-			for(var i:int = 0; i < checkboxes.length; i++ ){
+			for(i = 0; i < checkboxes.length; i++ ){
 				addChild(checkboxes[i]);
 				var width:int = STAGE_WIDTH - leftColumn - 2 * PADDING;
 				if (i <= lastDouble) width = width / 2;
@@ -190,26 +188,19 @@ package
 		}
 		
 		private function initialize(event:MouseEvent):void{
-			appodeal.setLogging(loggingCb.selected);
+			if(loggingCb.selected) appodeal.setLogLevel(LogLevel.VERBOSE);
+			else appodeal.setLogLevel(LogLevel.NONE);
 			appodeal.setTesting(testingCb.selected);
-			if(confirmCb.selected) appodeal.confirm(getSelectedAdType());
 			
 			//Setting user data
 			userSettings.setAge(25);
-			userSettings.setAlcohol(Alcohol.NEUTRAL);
-			userSettings.setBirthday("01/01/1990");
-			userSettings.setEmail("hi@appodeal.com");
 			userSettings.setGender(Gender.MALE);
-			userSettings.setInterests("gym, cinema, cars, games, tvshows");
-			userSettings.setOccupation(Occupation.WORK);
-			userSettings.setRelationship(Relation.DATING);
-			userSettings.setSmoking(Smoking.NEUTRAL);
 			userSettings.setUserId("custom_user_id");
 			
-			appodeal.set728x90Banners(!disable728x90BannersCb.selected);
-			appodeal.setSmartBanners(disableSmartBannersCb.selected);
+			appodeal.setTabletBanners(!disable728x90BannersCb.selected);
+			appodeal.setSmartBanners(!disableSmartBannersCb.selected);
 			appodeal.setBannerAnimation(!disableBannerAnimationCb.selected);
-			appodeal.setOnLoadedTriggerBoth(getSelectedAdType(), enableTriggerOnLoadedOnPrecacheCb.selected);
+			appodeal.setTriggerOnLoadedOnPrecache(getSelectedAdType(), enableTriggerOnLoadedOnPrecacheCb.selected);
 			if (disableLocationPermissionCheckCb.selected)
 				appodeal.disableLocationPermissionCheck();
 			if (disableWriteExternalStorageCheckCb.selected)
@@ -246,11 +237,7 @@ package
 				case 3:
 					return AdType.INTERSTITIAL;
 				case 4:
-					return AdType.SKIPPABLE_VIDEO;
-				case 5:
 					return AdType.REWARDED_VIDEO;
-				case 6:
-					return AdType.INTERSTITIAL | AdType.SKIPPABLE_VIDEO;
 				default:
 					return 0;
 			}
